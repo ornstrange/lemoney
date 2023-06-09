@@ -1,0 +1,7 @@
+hc list_monitors
+  =>
+  0: 2560x1600+0+0 with tag "1" [FOCUS]
+  index = @[0]
+  geo = @[3]:.split(' ')[0]
+
+
