@@ -1,20 +1,13 @@
-from herbstluftwm import monitors_info, Geometry
+from formatting import background
+from herbstluftwm import monitors_info
+from lemonbar import *
+from settings import BORDER_W, HEIGHT, PADDING
 from subprocess import Popen
 from typing import Literal
-from util import setup_logger, spawn
+from util import get_output, setup_logger, spawn
 import argparse
 import logging
 import signal
-import time
-
-"""
-Constants
-___
-"""
-
-BORDER_W = 1
-HEIGHT   = 40
-PADDING  = 16
 
 """
 Main
@@ -34,24 +27,9 @@ def add_arguments(argparser: argparse.ArgumentParser):
         help='Set logging level'
     )
     argparser.add_argument(
-        '-m', '--monitors', dest='monitors', default=None, type=int, nargs='+',
+        '-m', '--monitors', dest='monitors', default=[], type=int, nargs='+',
         help='Select which monitors to render on. If omitted render on all monitors'
     )
-
-def calculate_bar_geometry(geometry: Geometry):
-    """Calculate bar geometry with border"""
-
-    width = geometry['width'] - PADDING * 2 - BORDER_W * 2
-    height = HEIGHT - BORDER_W * 2 - BORDER_W * 2
-    border_width  = width + BORDER_W * 2
-    border_height = height + BORDER_W * 2
-
-    x = geometry['x'] + PADDING + BORDER_W
-    y = PADDING + BORDER_W
-    border_x = geometry['x'] + PADDING
-    border_y = PADDING
-
-    return f'{width}x{height}+{x}+{y}', f'{border_width}x{border_height}+{border_x}+{border_y}'
 
 def cleanup(procs: list[Popen[str]]):
     for proc in procs:
@@ -63,6 +41,10 @@ def handler(signum, frame):
     raise Exception(f'Received signal {signame} @ lineno {frame.f_lineno}')
 
 signal.signal(signal.SIGTERM, handler)
+
+def spawn_bar(geometry, suffix='', options={}):
+    lemonbar_cmd = generate_lemonbar_cmd({ 'name': f'Lemoney-{suffix}', 'geometry': geometry, **options })
+    return spawn(lemonbar_cmd, check=True, text=True)
 
 if __name__ == '__main__':
     argparser = argparse.ArgumentParser(
@@ -85,21 +67,40 @@ if __name__ == '__main__':
 
     setup_logger(loglevel, args.logfile)
 
-    filter_monitors = args.monitors is not None
+    border_procs: list[Popen[str]] = []
     procs: list[Popen[str]] = []
 
-    for index, geometry in monitors_info():
-        if filter_monitors and index not in args.monitors: # Skip filtered monitors
-            continue
+    top = True
+    bot = True
 
-        top_bar_geometry, top_border_geometry = calculate_bar_geometry(geometry)
+    # Start border "bars"
+    for index, geometry in monitors_info(args.monitors):
+        border_geometry = calculate_border_bar_geometry(geometry)
 
-        lemonbar_cmd = f'lemonbar -n Lemoney -g {top_bar_geometry}'
+        if top:
+            border_procs.append(spawn_bar(border_geometry, f'{index}-top-border', { 'background': '#ffffff' }))
+        if bot:
+            border_procs.append(spawn_bar(border_geometry, f'{index}-bot-border', { 'bottom': True, 'background': '#ffffff' }))
 
-        procs.append(spawn(lemonbar_cmd, check=True, text=True))
+    # Start bars
+    for index, geometry in monitors_info(args.monitors):
+        geometry = calculate_bar_geometry(geometry)
+
+        if top:
+            procs.append(spawn_bar(geometry, f'{index}-top'))
+        if bot:
+            procs.append(spawn_bar(geometry, f'{index}-bot', { 'bottom': True }))
+
+    # Set padding for herbstluftwm
+    for index, geometry in monitors_info(args.monitors):
+        pad_cmd = f'herbstclient pad {index}'
+        pad_cmd += f' {HEIGHT + PADDING} 0' if top else ' 0 0'
+        pad_cmd += f' {HEIGHT + PADDING} 0' if bot else ' 0 0'
+        get_output(pad_cmd)
 
     counter = 0
 
+    # Main loop
     try:
         while True:
             for proc in procs:
