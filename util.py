@@ -1,6 +1,7 @@
-import subprocess
+from typing import IO
 import logging
 import shlex
+import subprocess
 
 logger = logging.getLogger(__name__)
 
@@ -13,7 +14,7 @@ def setup_logger(level: int | None = logging.DEBUG, log_filename: str | None = N
         level=level
     )
 
-def get_output(cmd: str, check: bool = True, timeout: float | None = None, text: bool = True):
+def get_output(cmd: str, check: bool = True, timeout: float | None = None, text: bool = True) -> str:
     try:
         proc = subprocess.run(shlex.split(cmd), capture_output=True, check=check, timeout=timeout, text=text)
         return proc.stdout.strip()
@@ -37,4 +38,14 @@ def spawn(cmd: str, check: bool = False, *args, **kwargs):
         if check:
             raise subprocess.CalledProcessError(cmd=cmd, returncode=return_code, output=stdout, stderr=stderr)
     return proc
+
+def write_at_0(fs: IO[str], data: str, flush = True):
+    fs.seek(0)
+    fs.write(data + '\n')
+    if flush:
+        fs.flush()
+
+def readline_at_0(fs: IO[str]):
+    fs.seek(0)
+    return fs.readline().strip()
 

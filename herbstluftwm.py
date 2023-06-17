@@ -1,6 +1,5 @@
 from typing import Literal
 from util import *
-import formatting as Format
 import logging
 import shutil
 
@@ -32,14 +31,6 @@ def monitors_info(filter_monitors: list[int] = []):
         if filter_monitors and index not in filter_monitors:
             continue
         yield index, geometry
-
-"""
-Herbstluft Module start
-___
-"""
-
-def herbstluft_module(options):
-    return Format.reverse() + '1' + Format.reverse() + ' | 2 | 3'
 
 if __name__ == '__main__':
     print(list(monitors_info()))

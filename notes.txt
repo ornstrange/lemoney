@@ -4,4 +4,10 @@ hc list_monitors
   index = @[0]
   geo = @[3]:.split(' ')[0]
 
+--
+module notes
+
+run module with options. module handles creating intervals and stuff.
+module should run on a seperate thread.
+module gets a filestream to write to and a signal function to tell the bar there is new content.
 

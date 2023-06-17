@@ -1,0 +1,30 @@
+top:
+  left:
+    - module: herbstluftwm
+  center:
+    - module: battery
+  right:
+    - module: cmd
+      options:
+        cmd: 'date'
+        args:
+          - '+%c'
+bottom:
+  left:
+    - module: disk
+      options:
+        filesystems:
+          - name: 'root'
+            path: '/'
+          - name: 'home'
+            path: '/home'
+  center:
+    - module: script
+      options:
+        path: '/home/ornstrange/.config/scripts/ip'
+    - module: script
+      options:
+        path: '/home/ornstrange/.config/scripts/network'
+  right:
+    - module: volume
+

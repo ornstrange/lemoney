@@ -3,24 +3,24 @@ from settings import *
 from typing import NotRequired, TypedDict
 import shutil
 
-def calculate_border_bar_geometry(geometry: Geometry):
+def calculate_border_bar_geometry(geometry: Geometry, border_width: int = 1):
     """Calculate border bar geometry"""
 
     width = geometry['width'] - PADDING * 2
-    height = HEIGHT - BORDER_W * 2
+    height = HEIGHT
 
     x = geometry['x'] + PADDING
     y = PADDING
     return f'{width}x{height}+{x}+{y}'
 
-def calculate_bar_geometry(geometry: Geometry):
+def calculate_bar_geometry(geometry: Geometry, border_width: int = 1):
     """Calculate bar geometry"""
 
-    width = geometry['width'] - PADDING * 2 - BORDER_W * 2
-    height = HEIGHT - BORDER_W * 2 - BORDER_W * 2
+    width = geometry['width'] - PADDING * 2 - border_width * 2
+    height = HEIGHT - border_width * 2
 
-    x = geometry['x'] + PADDING + BORDER_W
-    y = PADDING + BORDER_W
+    x = geometry['x'] + PADDING + border_width
+    y = PADDING + border_width
 
     return f'{width}x{height}+{x}+{y}'
 
@@ -57,7 +57,4 @@ def generate_lemonbar_cmd(options: Options = {}):
         value = options.get(option, defaults.get(option))
         cmd += format_str.format(value) if value else ''
     return cmd
-
-if __name__ == '__main__':
-    print(lemonbar_cmd())
 
